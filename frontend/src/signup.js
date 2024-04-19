@@ -10,19 +10,14 @@ const signup = async (e) => {
       email,
       password,
     });
-    console.log("res", res.info);
-    if (res.affectedRows !== 1) throw new Error("Failed to signup");
+    if (res.status !== 200) throw new Error(res.statusText);
 
-    // console.log(res.data);
     e.target.name.value = "";
     e.target.email.value = "";
     e.target.password.value = "";
+    alert("Signup succesful");
   } catch (e) {
-    
     const error = document.getElementById("error");
     error.innerText = e.message;
-    setTimeout(() => {
-      error.innerText = "";
-    }, 5000);
   }
 };

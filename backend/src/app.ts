@@ -1,6 +1,9 @@
 // backend.js
 import http, { IncomingMessage, ServerResponse } from "http";
 import { db } from "./db";
+import bcrypt from "bcrypt";
+import dotenv from "dotenv";
+dotenv.config();
 
 function requestHandler(req: IncomingMessage, res: ServerResponse) {
   // Set CORS headers
@@ -23,22 +26,34 @@ function requestHandler(req: IncomingMessage, res: ServerResponse) {
       body += chunk.toString();
     });
 
-    req.on("end", () => {
+    req.on("end", async () => {
       const data = JSON.parse(body);
       // console.log("data", data);
+      const password = data.password;
+      const hashedPassword = await bcrypt.hash(
+        password,
+        +process.env.AUTH_SALT!
+      );
+      console.log(hashedPassword);
+
       db.query(
         "INSERT INTO users (name, email, password) VALUES (?, ?, ?)",
-        [data.name, data.email, data.password],
-        (err, res) => {
+        [data.name, data.email, hashedPassword],
+        (err, data: any) => {
           if (err) {
-            console.error("Error:", err);
-          } else {
-            console.log("Inserted successfully:", res);
+            res.statusCode = 401;
+            res.statusMessage = "Failed to signup";
+            return res.end();
+          } else if (data.affectedRows !== 1) {
+            res.statusCode = 500;
+            res.statusMessage = "Internal Error";
+            return res.end();
           }
+          res.statusCode = 200;
+          res.statusMessage = "Signup succesful";
+          return res.end();
         }
       );
-      res.writeHead(200, { "Content-Type": "text/plain" });
-      res.end("success");
     });
   } else if (method === "POST" && url === "/user/signin") {
     let body = "";
@@ -51,18 +66,28 @@ function requestHandler(req: IncomingMessage, res: ServerResponse) {
       db.query(
         "select email, password from users where email = ?",
         [incomingData.email],
-        (e, data: any) => {
-          if(data.length===0) {
-            res.writeHead(404, { "Content-Type": "text/plain" });
-            return res.end("User not found");
-          }
-          else if (e) {
-            res.writeHead(500, { "Content-Type": "text/plain" });
-            return res.end(e?.message);
+        async (e, data: any) => {
+          if (e) {
+            res.statusCode = 500;
+            res.statusMessage = "Something went wrong!";
+            return res.end();
+          } else if (data.length === 0) {
+            res.statusCode = 404;
+            res.statusMessage = "User not found";
+            return res.end();
           }
           const extData = data[0];
-          res.writeHead(200, { "Content-Type": "text/plain" });
-          return res.end(JSON.stringify(extData));
+          const hashedPassword = extData.password;
+          const typedPassword = incomingData.password;
+          const isMatched = await bcrypt.compare(typedPassword, hashedPassword);
+          if (isMatched) {
+            res.statusCode = 200;
+            res.statusMessage = "Login successful";
+            res.end();
+          } else {
+            res.statusCode = 401;
+            res.statusMessage = "Password does not matched";
+          }
         }
       );
     });
