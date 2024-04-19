@@ -1,28 +1,56 @@
+// backend.js
 import http, { IncomingMessage, ServerResponse } from "http";
-// Define your request handler function
+import { db } from "./db";
+
 function requestHandler(req: IncomingMessage, res: ServerResponse) {
-  // Extract the request URL and method
+  // Set CORS headers
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+  // Handle preflight requests (OPTIONS)
+  if (req.method === "OPTIONS") {
+    res.writeHead(200);
+    res.end();
+    return;
+  }
+
   const { url, method } = req;
 
-  // Handle different routes based on URL and method
   if (method === "POST" && url === "/user/signup") {
-    res.writeHead(200, { "Content-Type": "text/plain" });
+    let body = "";
+    req.on("data", (chunk) => {
+      body += chunk.toString();
+    });
 
-    res.end({ vikas: "kumar" });
+    req.on("end", () => {
+      const data = JSON.parse(body);
+      console.log("data", data);
+      db.query(
+        "INSERT INTO users (name, email, password) VALUES (?, ?, ?)",
+        [data.name, data.email, data.password],
+        (err, res) => {
+          if (err) {
+            console.error("Error:", err);
+          } else {
+            console.log("Inserted successfully:", res);
+          }
+        }
+      );
+      res.writeHead(200, { "Content-Type": "text/plain" });
+      res.end("success");
+    });
   } else if (method === "GET" && url === "/") {
     res.writeHead(200, { "Content-Type": "text/plain" });
     res.end("About page");
   } else {
-    // Handle 404 - Not Found
     res.writeHead(404, { "Content-Type": "text/plain" });
     res.end("404 - Not Found");
   }
 }
 
-// Create an HTTP server with the request handler function
 const server = http.createServer(requestHandler);
 
-// Start the server on port 3000
 const PORT = 3000;
 server.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
