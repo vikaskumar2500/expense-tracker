@@ -9,12 +9,13 @@ async function signin(e) {
       password,
     });
 
+    console.log("res", res);
     if (res.status !== 200) throw new Error(res.statusText);
-
     e.target.email.value = "";
     e.target.password.value = "";
-    alert(res.statusText);
+    window.location.href = "/frontend/html/expenses.html";
   } catch (e) {
+    console.log("frontedn index", e);
     const error = document.getElementById("error");
     error.innerText = e.message;
   }

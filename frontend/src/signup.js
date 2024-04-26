@@ -10,12 +10,12 @@ const signup = async (e) => {
       email,
       password,
     });
-    if (res.status !== 200) throw new Error(res.statusText);
-
+    console.log("res", res);
+    if (res.status !== 200) throw new Error("Failed to signup");
     e.target.name.value = "";
     e.target.email.value = "";
     e.target.password.value = "";
-    alert("Signup succesful");
+    window.location.href = "/frontend/html/signin.html";
   } catch (e) {
     const error = document.getElementById("error");
     error.innerText = e.message;
