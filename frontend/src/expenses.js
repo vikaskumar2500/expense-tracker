@@ -3,6 +3,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   try {
     const state = history.state;
     console.log("state", state);
+    console.log("headers", axios.headers)
 
     // Example: Make an axios POST request
     // const res = await axios.post("http://localhost:3000/expenses", { userId });
@@ -31,6 +32,7 @@ async function addExpense(e) {
   const amount = e.target.amount.value;
   const description = e.target.description.value;
   const category = e.target.category.value;
+  console.log("header", axios.headers);
   try {
     const res = await axios.post("http://localhost:3000/expenses/add-expense", {
       amount,

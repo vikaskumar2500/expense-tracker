@@ -15,7 +15,8 @@ const signup = async (e) => {
     e.target.name.value = "";
     e.target.email.value = "";
     e.target.password.value = "";
-    window.location.href = "/frontend/html/signin.html";
+    window.location.href =
+      "file:///D:/Sharpener/Backend(node.js)/expense-tracker/frontend/html/signin.html";
   } catch (e) {
     const error = document.getElementById("error");
     error.innerText = e.message;
