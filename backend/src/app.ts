@@ -39,8 +39,7 @@ Expenses.belongsTo(Users, {
 
 
 sequelize
-  .sync()
-  .then(() => {
+  .sync().then(() => {
     app.listen(3000, () => {
       console.log("Server is running at port of 3000");
     });

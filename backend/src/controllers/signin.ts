@@ -1,20 +1,16 @@
 import bcrypt from "bcrypt";
 import { Users } from "../models/users";
-import { NextFunction, Request, Response } from "express";
+import type { Request, Response } from "express";
+import * as jwt from 'jsonwebtoken';
 
 export const postSignin = async (
   req: Request,
   res: Response,
-  next: NextFunction
 ) => {
   try {
     const { email, password } = req.body;
+    console.log("body", req.body);
     const userRes = await Users.findOne<any>({ where: { email } });
-
-    console.log("headers", req.headers.authorization);
-    // axios.defaults.headers.common["Authorization"] = "Vikas";
-    // console.log("header",req); 
-    console.log("userRes",userRes)
     if (!userRes) {
       throw new Error("Failed to Login");
     }
@@ -23,8 +19,10 @@ export const postSignin = async (
     const isMatched = await bcrypt.compare(typedPassword, hashedPassword);
     if (!isMatched)
       return res.status(403).json({ message: "Password does not match!" });
-    // req.user = userRes;
-    return res.end();
+
+
+    const authToken = jwt.sign({ id: userRes.id, email: userRes.email }, process.env.SECRET_KEY!, { algorithm: "HS256" });
+    return res.status(200).json({ token: authToken });
   } catch (e: any) {
     return res.status(500).json({ message: e.message });
   }
