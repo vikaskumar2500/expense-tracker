@@ -16,6 +16,8 @@ addEventListener("DOMContentLoaded", async () => {
 
     const premiumButton = document.getElementById("rzp-button1");
     if (isPremium) premiumButton.style = "display:none;";
+    const div = document.getElementById("premium");
+    div.textContent = "Your are now a premium user";
 
     const list = document.getElementById("expense-list");
     list.style =
@@ -103,6 +105,7 @@ document.getElementById("rzp-button1").onclick = async (e) => {
             paymentId: response.razorpay_payment_id,
             token: token,
           });
+          alert("You are now a premium user!");
         } catch (e) {
           console.log("successful error?", e.message);
         }
