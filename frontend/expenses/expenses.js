@@ -111,9 +111,15 @@ document.getElementById("rzp-button1").onclick = async (e) => {
     var rzp = new Razorpay(options);
     rzp.open();
 
-    rzp.on("payment.failed", (res) => {
-      console.log("payment failed", res);
-      alert("payment failed, please try again after some time!");
+    rzp.on("payment.failed", async () => {
+      try {
+        await axios.post("http://localhost:3000/expenses/payment-failed", {
+          orderId: data.orderId,
+          token: token,
+        });
+      } catch (e) {
+        console.log(e.message);
+      }
     });
   } catch (e) {
     console.log(e);

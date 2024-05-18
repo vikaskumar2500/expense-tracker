@@ -80,7 +80,6 @@ export const createOrders = async (req: Request, res: Response) => {
 
 export const postPaymentCaptured = async (req: Request, res: Response) => {
   try {
-
     const token = req.body.token;
     const user = decodeToken(token);
     if (!user) throw new Error("UnAuthorized user");
@@ -100,4 +99,25 @@ export const postPaymentCaptured = async (req: Request, res: Response) => {
     console.log(e);
     return res.status(500).json({ message: e.message });
   }
+}
+
+export const postPaymentFailed = async (req: Request, res: Response) => {
+  try {
+    const token = req.body.token;
+    const user = decodeToken(token);
+    if (!user) throw new Error("UnAuthorized user");
+
+    await Orders.update({
+      status: "Failed",
+    }, {
+      where: {
+        orderId: req.body.orderId,
+        userId: user.id,
+      }
+    });
+    return res.status(200).json({ message: "Payment failed!" });
+  } catch (e) {
+    return res.status(500).json({ message: e.message });
+  }
+
 }
