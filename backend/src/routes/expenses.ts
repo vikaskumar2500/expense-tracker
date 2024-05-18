@@ -1,8 +1,12 @@
 import express from "express";
-import { postaddExpense } from "../controllers/expenses";
+import { getExpenses, postaddExpense, createOrders, postPaymentCaptured } from "../controllers/expenses";
 
 const router = express.Router();
 
+
+router.get("/", getExpenses);
+router.post("/orders", createOrders);
 router.post("/add-expense", postaddExpense);
+router.post("/payment-captured", postPaymentCaptured);
 
 export default router;

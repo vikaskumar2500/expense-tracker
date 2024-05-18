@@ -6,16 +6,13 @@ const signup = async (event) => {
   console.log("name", name, email, password);
 
   try {
-    const res = await axios.post(
-      "http://localhost:3000/user/signup",
-      {
-        name,
-        email,
-        password,
-      },
-      { headers: { Authorization: "Vikas" } }
-    );
-    if (res.status !== 200) throw new Error("Failed to signup");
+    const res = await axios.post("http://localhost:3000/user/signup", {
+      name,
+      email,
+      password,
+    });
+    const body = res.data;
+    if (res.status !== 200) throw new Error(body.message);
     event.target.name.value = "";
     event.target.email.value = "";
     event.target.password.value = "";
