@@ -67,14 +67,15 @@ async function addExpense(e) {
   }
 }
 
-const addLiItem = ({ category, description, amount }) => {
+const addLiItem = ({ id, category, description, amount }) => {
   const li = document.createElement("li");
+  li.id = `expense${id}`;
   li.style =
     "display:flex; align-items: center; width:100%; width:30rem; border:1px solid whitesmoke; border-radius:8px;  padding:0px 20px 0px 20px";
   li.innerHTML = `
 		<div style="display:flex; align-items:start; width:100%; justify-content: space-between; padding:10px; gap:5px;">
 			<span style="font-size:18px; font-weight:500;">${amount} - ${category} - ${description}</span>
-      <button id='delete' style="cursor:pointer" type='button'>Delete Expense</button>
+      <button id='delete' value=${id} onclick="deleteExpenses(event)" style="cursor:pointer" type='button'>Delete Expense</button>
 		</div>
 	`;
 
@@ -151,19 +152,43 @@ const showLeaderboard = async () => {
 
     const h1 = document.createElement("h1");
     h1.textContent = "Leaderboard";
-    leaderboard.appendChild(h1);
-
     const ul = document.createElement("ul");
+    const hasChild = leaderboard.hasChildNodes();
+    if (hasChild) {
+      leaderboard.removeChild(leaderboard.firstChild);
+      leaderboard.removeChild(leaderboard.lastChild);
+    }
+
     ul.style = `height:20rem; overflow-y:scroll`;
     for (let i = 0; i < data.length; i++) {
       const li = document.createElement("li");
       li.style = "display:flex; align-items:start; padding:10px";
       li.innerHTML = `
-        <span style="font-size:18px; font-weight:500;">Name: ${data[i].name} - Total expenses: ${data[i].total_expenses}</span>
+        <span style="font-size:18px; font-weight:500">Name: ${data[i].name} - Total expenses: ${data[i].total_expenses}</span>
       `;
       ul.appendChild(li);
     }
-    leaderboard.appendChild(ul);
+    if (!hasChild) {
+      leaderboard.appendChild(h1);
+      leaderboard.appendChild(ul);
+    }
+  } catch (e) {
+    console.log(e);
+  }
+};
+
+const deleteExpenses = async (event) => {
+  event.preventDefault();
+  const id = event.target.value;
+  const token = localStorage.getItem("jwt_token");
+  try {
+    const res = await axios.post(
+      `http://localhost:3000/expenses/delete/${id}`,
+      { token }
+    );
+    if (res.status !== 200) throw new Error("Something went wrong");
+    const expense = document.getElementById(`expense${id}`);
+    expense.remove();
   } catch (e) {
     console.log(e);
   }
