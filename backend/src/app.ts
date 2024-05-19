@@ -6,6 +6,7 @@ import { sequelize } from "./db";
 import dotenv from "dotenv";
 import expenseRouter from "./routes/expenses";
 import usersRouter from "./routes/users";
+import premiumRouter from './routes/premium';
 import { Users } from "./models/users";
 import { Expenses } from "./models/expenses";
 import { Orders } from "./models/orders";
@@ -22,6 +23,7 @@ app.use(cookieParser());
 
 app.use("/user", usersRouter);
 app.use("/expenses", expenseRouter);
+app.use("/premium", premiumRouter);
 
 app.use("/", (req, res) => {
   res.send(`

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Add Expense</title>
     <script src="./expenses.js" defer></script>
+    <link rel="stylesheet" href="expenses.css" />
   </head>
 
   <body>
@@ -79,14 +80,42 @@
         >
           Add Expense
         </button>
+        <button id="rzp-button1">Get Premium</button>
+
+        <div id="premium" class="hidden">
+          <span>Your are a Premium user</span>
+          <button
+            id="leaderboard"
+            onclick="showLeaderboard(event)"
+            type="button"
+            style="cursor: pointer"
+          >
+            Show Leaderboard
+          </button>
+        </div>
         <div id="error" style="color: red"></div>
       </form>
 
-      <ul id="expense-list"></ul>
-      <button id="rzp-button1">Get Premium</button>
-      <div id="premium"></div>
-      <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr)">
+        <div
+          id="listdiv"
+          style="
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+          "
+        >
+          <h1>Expenses</h1>
+          <ul id="expense-list"></ul>
+        </div>
+        <div
+          id="show-leaderboard"
+          style="display: flex; flex-direction: column; align-items: center"
+        ></div>
+      </div>
     </main>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
     <script
       src=" https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.8/axios.min.js"

@@ -14,14 +14,16 @@ addEventListener("DOMContentLoaded", async () => {
     const data = res.data.expenses;
     const isPremium = res.data.isPremium;
 
-    const premiumButton = document.getElementById("rzp-button1");
-    if (isPremium) premiumButton.style = "display:none;";
-    const div = document.getElementById("premium");
-    div.textContent = "Your are now a premium user";
+    const getPremiumButton = document.getElementById("rzp-button1");
+    const premium = document.getElementById("premium");
+    if (isPremium) {
+      getPremiumButton.className = "hidden";
+      premium.className = "";
+    }
 
     const list = document.getElementById("expense-list");
     list.style =
-      "display:flex; flex-direction:column; align-items:start; gap:5px";
+      "display:flex; flex-direction:column; align-items:start; gap:5px; height:20rem;overflow-y: scroll;";
 
     for (let i = 0; i < data.length; i++) {
       const li = addLiItem(data[i]);
@@ -68,14 +70,12 @@ async function addExpense(e) {
 const addLiItem = ({ category, description, amount }) => {
   const li = document.createElement("li");
   li.style =
-    "display:flex; align-items: center; justify-content:space-between; width:30rem; border:1px solid whitesmoke; border-radius:8px;  padding:0px 20px 0px 20px";
+    "display:flex; align-items: center; width:100%; width:30rem; border:1px solid whitesmoke; border-radius:8px;  padding:0px 20px 0px 20px";
   li.innerHTML = `
-		<div style="display:flex; flex-direction:column; align-items:start; justify-content: center; padding:10px">
-			<div style="font-size:18px; font-weight:500;">${category}</div>
-			<p style="font-size:12px; font-weight:300; ">${description} </p>
+		<div style="display:flex; align-items:start; width:100%; justify-content: space-between; padding:10px; gap:5px;">
+			<span style="font-size:18px; font-weight:500;">${amount} - ${category} - ${description}</span>
+      <button id='delete' style="cursor:pointer" type='button'>Delete Expense</button>
 		</div>
-		
-		<span style="font-weight:600;">${amount} Rs</span>
 	`;
 
   return li;
@@ -124,6 +124,46 @@ document.getElementById("rzp-button1").onclick = async (e) => {
         console.log(e.message);
       }
     });
+  } catch (e) {
+    console.log(e);
+  }
+};
+
+const showLeaderboard = async () => {
+  try {
+    const token = localStorage.getItem("jwt_token");
+    if (!token) {
+      window.location.href = "../signin/signin.html";
+      return;
+    }
+
+    const res = await axios("http://localhost:3000/premium/show-leaderboard", {
+      headers: { Authorization: token },
+    });
+
+    const data = res.data;
+
+    const leaderboard = document.getElementById("show-leaderboard");
+    if (data.length === 0) {
+      leaderboard.innerHTML = `<span> No expenses added yet! </span>`;
+      return;
+    }
+
+    const h1 = document.createElement("h1");
+    h1.textContent = "Leaderboard";
+    leaderboard.appendChild(h1);
+
+    const ul = document.createElement("ul");
+    ul.style = `height:20rem; overflow-y:scroll`;
+    for (let i = 0; i < data.length; i++) {
+      const li = document.createElement("li");
+      li.style = "display:flex; align-items:start; padding:10px";
+      li.innerHTML = `
+        <span style="font-size:18px; font-weight:500;">Name: ${data[i].user.name} - Total expenses: ${data[i].totalAmount}</span>
+      `;
+      ul.appendChild(li);
+    }
+    leaderboard.appendChild(ul);
   } catch (e) {
     console.log(e);
   }
