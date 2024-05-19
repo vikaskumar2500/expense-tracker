@@ -159,7 +159,7 @@ const showLeaderboard = async () => {
       const li = document.createElement("li");
       li.style = "display:flex; align-items:start; padding:10px";
       li.innerHTML = `
-        <span style="font-size:18px; font-weight:500;">Name: ${data[i].user.name} - Total expenses: ${data[i].totalAmount}</span>
+        <span style="font-size:18px; font-weight:500;">Name: ${data[i].name} - Total expenses: ${data[i].total_expenses}</span>
       `;
       ul.appendChild(li);
     }

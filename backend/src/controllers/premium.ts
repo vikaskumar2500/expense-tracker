@@ -13,18 +13,9 @@ export const getShowLeaderboard = async (req: Request, res: Response) => {
     if (!user)
       return res.status(403).json({ message: "UnAuthorized user" });
 
-    const totalExpenses = await Expenses.findAll({
-      attributes: [
-        'userId',
-        [Sequelize.fn('SUM', Sequelize.col('amount')), 'totalAmount'],
-      ],
-
-      include: {
-        model: Users,
-        attributes: ['name']
-      },
-      group: 'userId',
-      order: [[Sequelize.literal('totalAmount'), 'DESC']],
+    const totalExpenses = await Users.findAll({
+      attributes: ['id', 'name', 'total_expenses'],
+      order: [['total_expenses', 'DESC']]
     });
     return res.status(200).json(totalExpenses);
   } catch (e) {

@@ -13,5 +13,6 @@ export const Users = sequelize.define("users", {
   email: { type: Sequelize.STRING, allowNull: false, unique: true },
   password: { type: Sequelize.TEXT, allowNull: false },
   isPremium: { type: Sequelize.BOOLEAN, defaultValue: false },
+  total_expenses: { type: Sequelize.INTEGER, defaultValue: 0 },
 });
 

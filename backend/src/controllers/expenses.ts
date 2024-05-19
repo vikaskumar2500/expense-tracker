@@ -38,7 +38,9 @@ export const postaddExpense = async (req: Request, res: Response) => {
 
     if (!user) throw new Error("Something went wrong, please login again!")
     // console.log("userId", user.id)
-    await Expenses.create({ amount, description, category, userId: user.id });
+    const updatedUser: any = await Users.findByPk(user.id);
+    await Users.update({ total_expenses: updatedUser.total_expenses + Number(amount) }, { where: { id: user.id } });
+    await Expenses.create({ amount, description, category, userId: user.id, });
     return res.status(200).json({ message: "Expenses created!" });
   } catch (e: any) {
     return res.status(500).json({ message: e.message })
