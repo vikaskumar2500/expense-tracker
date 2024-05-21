@@ -1,29 +1,54 @@
-import http, { IncomingMessage, ServerResponse } from "http";
-// Define your request handler function
-function requestHandler(req: IncomingMessage, res: ServerResponse) {
-  // Extract the request URL and method
-  const { url, method } = req;
+import express from "express";
+import cookieParser from "cookie-parser";
+import bodyParser from "body-parser";
+import cors from "cors";
+import { sequelize } from "./db";
+import dotenv from "dotenv";
+import expenseRouter from "./routes/expenses";
+import usersRouter from "./routes/users";
+import premiumRouter from './routes/premium';
+import { Users } from "./models/users";
+import { Expenses } from "./models/expenses";
+import { Orders } from "./models/orders";
 
-  // Handle different routes based on URL and method
-  if (method === "POST" && url === "/user/signup") {
-    res.writeHead(200, { "Content-Type": "text/plain" });
 
-    res.end({ vikas: "kumar" });
-  } else if (method === "GET" && url === "/") {
-    res.writeHead(200, { "Content-Type": "text/plain" });
-    res.end("About page");
-  } else {
-    // Handle 404 - Not Found
-    res.writeHead(404, { "Content-Type": "text/plain" });
-    res.end("404 - Not Found");
-  }
-}
+dotenv.config();
 
-// Create an HTTP server with the request handler function
-const server = http.createServer(requestHandler);
+const app = express();
 
-// Start the server on port 3000
-const PORT = 3000;
-server.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+app.use(cors());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(cookieParser());
+
+app.use("/user", usersRouter);
+app.use("/expenses", expenseRouter);
+app.use("/premium", premiumRouter);
+
+app.use("/", (req, res) => {
+  res.send(`
+    <body>
+      <div>Home</div>
+    </body>
+  `);
 });
+
+
+Users.hasOne(Orders, { onDelete: "CASCADE", constraints: true });
+Orders.belongsTo(Users);
+Users.hasMany(Expenses);
+Expenses.belongsTo(Users, {
+  constraints: true,
+  onDelete: "CASCADE",
+});
+
+
+sequelize
+  .sync().then(() => {
+    app.listen(3000, () => {
+      console.log("Server is running at port of 3000");
+    });
+  })
+  .catch((e) => {
+    console.log(e);
+  });
