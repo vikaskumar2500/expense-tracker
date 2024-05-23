@@ -1,6 +1,6 @@
 import { Sequelize } from "sequelize"
 
-export const sequelize = new Sequelize("expense", "root", "vikas", {
+export const sequelize = new Sequelize("expense", "root", "password", {
   host: "localhost",
   dialect: "mysql",
 });
@@ -8,6 +8,6 @@ export const sequelize = new Sequelize("expense", "root", "vikas", {
 //   database: "expense",
 //   host: "localhost",
 //   port: 3306,
-//   password: "vikas",
+//   password: "password",
 //   user: "root",
 // });
