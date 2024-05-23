@@ -7,7 +7,7 @@ export const sendEmailViaSMTP = async (email: string, otp: number) => {
     secure: false,
     auth: {
       user: "vikas.nits8084@gmail.com",
-      pass: process.env.NODEMAILER_PASS,
+      pass: process.env.NODEMAILER_PASSWORD,
     },
   })
 

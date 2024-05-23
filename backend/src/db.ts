@@ -1,13 +1,22 @@
-import { Sequelize } from "sequelize"
+import { Sequelize } from "sequelize";
+import dot from "dotenv";
 
-export const sequelize = new Sequelize("expense", "root", "vikas", {
-  host: "localhost",
-  dialect: "mysql",
-});
+dot.config();
+
+export const sequelize = new Sequelize(
+  process.env.DATABASE_NAME,
+  process.env.DATABASE_USERNAME,
+  process.env.DATABASE_PASSWORD,
+  {
+    host: process.env.DATABASE_HOST,
+    port: +process.env.DATABASE_PORT,
+    dialect: "mysql",
+  }
+);
 // export const db = mysql.createPool({
-//   database: "expense",
-//   host: "localhost",
-//   port: 3306,
-//   password: "vikas",
-//   user: "root",
+//   database: ,
+//   host: ,
+//   port: ,
+//   password: ,
+//   user:,
 // });

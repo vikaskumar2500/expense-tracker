@@ -46,14 +46,13 @@ const forgotPassword = async (event) => {
     const res = await axios.post("http://localhost:3000/user/forgot-password", {
       email,
       newPassword,
+      enteredOtp
     });
-    console.log("run?", res);
     if (res.status !== 200)
       throw new Error("Failed to update password, please try again later!");
 
     alert("Succesfully updated your password.");
-
-    window.location.href = "../signin/signin.js";
+    window.location.href = "../signin/signin.html";
   } catch (e) {
     console.log(e);
     alert(e.message);
