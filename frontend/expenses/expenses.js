@@ -1,7 +1,6 @@
 addEventListener("DOMContentLoaded", async () => {
   try {
     const token = localStorage.getItem("jwt_token");
-    console.log("token", token);
     if (!token) {
       window.location.href = "../signin/signin.html";
       return;
@@ -10,20 +9,31 @@ addEventListener("DOMContentLoaded", async () => {
     const res = await axios("http://localhost:3000/expenses", {
       headers: { Authorization: token },
     });
-    console.log("res", res.data);
+
     const data = res.data.expenses;
     const isPremium = res.data.isPremium;
 
     const getPremiumButton = document.getElementById("rzp-button1");
     const premium = document.getElementById("premium");
+    const downloadExpense = document.getElementById("downloadexpense");
     if (isPremium) {
-      getPremiumButton.className = "hidden";
-      premium.className = "";
+      getPremiumButton.classList.add("hidden");
+      premium.classList.remove("hidden");
+      downloadExpense.classList.remove("hidden");
+    } else {
+      getPremiumButton.textContent = "Get Premium";
     }
 
     const list = document.getElementById("expense-list");
     list.style =
-      "display:flex; flex-direction:column; align-items:start; gap:5px; height:20rem;overflow-y: scroll;";
+      "display:flex; flex-direction:column; align-items:start; gap:5px; height:20rem;overflow-y: scroll; width:100%; margin:20px";
+
+    if (data.length === 0) {
+      list.innerHTML = `
+        <span id="not-found" style="max-width:40rem">Expenses not found!</span>
+      `;
+      return;
+    }
 
     for (let i = 0; i < data.length; i++) {
       const li = addLiItem(data[i]);
@@ -54,6 +64,10 @@ async function addExpense(e) {
     });
     if (res.status !== 200) throw new Error(res.data.message);
 
+    const notFound = document.getElementById("not-found");
+    if (notFound) {
+      notFound.classList.add("hidden");
+    }
     const list = document.getElementById("expense-list");
 
     const li = addLiItem({ category, description, amount });
@@ -71,7 +85,7 @@ const addLiItem = ({ id, category, description, amount }) => {
   const li = document.createElement("li");
   li.id = `expense${id}`;
   li.style =
-    "display:flex; align-items: center; width:100%; width:30rem; border:1px solid whitesmoke; border-radius:8px;  padding:0px 20px 0px 20px";
+    "display:flex; align-items: center; border:1px solid whitesmoke; border-radius:8px; max-width:40rem; padding:0px 20px 0px 20px";
   li.innerHTML = `
 		<div style="display:flex; align-items:start; width:100%; justify-content: space-between; padding:10px; gap:5px;">
 			<span style="font-size:18px; font-weight:500;">${amount} - ${category} - ${description}</span>
@@ -125,6 +139,8 @@ document.getElementById("rzp-button1").onclick = async (e) => {
         console.log(e.message);
       }
     });
+
+    window.location.reload();
   } catch (e) {
     console.log(e);
   }
@@ -192,4 +208,8 @@ const deleteExpenses = async (event) => {
   } catch (e) {
     console.log(e);
   }
+};
+
+const download = () => {
+  console.log("clicked? download");
 };
