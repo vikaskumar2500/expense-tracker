@@ -1,17 +1,18 @@
-const otp = Math.floor(111111 + Math.random() * 999999).toString();
-
-const sendSMTPEmailOTP = async (event) => {
+const forgotPassword = async (event) => {
   event.preventDefault();
   const token = localStorage.getItem("jwt_token");
   if (!token) {
-    return (window.location.href = "../signin/signin.js");
+    return (window.location.href = "../signin/signin.html");
   }
+  const button = document.getElementById("submit");
+
   try {
     const formData = new FormData(event.target);
     const email = formData.get("email");
 
+    button.textContent = "Sending...";
     const res = await axios.post(
-      "http://localhost:3000/user/send-smtp-email-otp",
+      "http://localhost:3000/password/forgot-password",
       {
         email,
         otp,
@@ -20,20 +21,20 @@ const sendSMTPEmailOTP = async (event) => {
     if (res.status !== 200)
       throw new Error("Failed to send OTP on your email address!");
 
-    const formNext = document.getElementById("form-next");
-    const formSubmit = document.getElementById("form-submit");
-    const emailSubmit = document.getElementById("submit-email-input");
-
-    formNext.classList.add("hidden");
-    formSubmit.classList.remove("hidden");
-    emailSubmit.setAttribute("value", email);
+    formData.delete("email");
+    alert(
+      "OTP and reset link sent!, Please check your email to reset the password."
+    );
+    window.location.href = "../signin/signin.html";
   } catch (e) {
     const error = document.getElementById("error");
     error.innerText = e.message;
+  } finally {
+    button.textContent = "Send";
   }
 };
 
-const forgotPassword = async (event) => {
+const resetPassword = async (event) => {
   event.preventDefault();
 
   const formData = new FormData(event.target);
@@ -42,12 +43,15 @@ const forgotPassword = async (event) => {
   const email = document.getElementById("submit-email-input").value;
 
   try {
-    if (enteredOtp !== otp) throw new Error("OTP didn't match!");
-    const res = await axios.post("http://localhost:3000/user/forgot-password", {
-      email,
-      newPassword,
-      enteredOtp
-    });
+    const user = localStorage.getItem("");
+    const res = await axios.post(
+      `http://localhost:3000/password/reset-password/${user.id}`,
+      {
+        email,
+        newPassword,
+        enteredOtp,
+      }
+    );
     if (res.status !== 200)
       throw new Error("Failed to update password, please try again later!");
 
