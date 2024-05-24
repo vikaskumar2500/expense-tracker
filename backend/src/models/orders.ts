@@ -3,10 +3,10 @@ import { sequelize } from "../db";
 
 export const Orders = sequelize.define("orders", {
   id: {
-    type: Sequelize.INTEGER,
+    type: Sequelize.STRING,
     allowNull: false,
     primaryKey: true,
-    autoIncrement: true,
+    defaultValue:Sequelize.UUIDV4
   },
   paymentId: Sequelize.STRING,
   orderId: { type: Sequelize.STRING, allowNull: false },

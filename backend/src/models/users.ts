@@ -3,11 +3,11 @@ import { sequelize } from "../db";
 
 export const Users = sequelize.define("users", {
   id: {
-    type: Sequelize.INTEGER,
+    type: Sequelize.STRING,
     allowNull: false,
     unique: true,
     primaryKey: true,
-    autoIncrement: true,
+    defaultValue:Sequelize.UUIDV4
   },
   name: { type: Sequelize.STRING, allowNull: false },
   email: { type: Sequelize.STRING, allowNull: false, unique: true },
