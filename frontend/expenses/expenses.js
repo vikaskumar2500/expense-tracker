@@ -12,16 +12,21 @@ addEventListener("DOMContentLoaded", async () => {
 
     const data = res.data.expenses;
     const isPremium = res.data.isPremium;
+    const bucketData = res.data.bucketData;
+
+    console.log("bucket", bucketData);
 
     const getPremiumButton = document.getElementById("rzp-button1");
     const premium = document.getElementById("premium");
     const downloadExpense = document.getElementById("downloadexpense");
+    const downloadedFilesContainer = document.getElementById(
+      "downloaded-files-container"
+    );
     if (isPremium) {
       getPremiumButton.classList.add("hidden");
       premium.classList.remove("hidden");
       downloadExpense.classList.remove("hidden");
-    } else {
-      getPremiumButton.textContent = "Get Premium";
+      downloadedFilesContainer.classList.remove("hidden");
     }
 
     const list = document.getElementById("expense-list");
@@ -38,6 +43,29 @@ addEventListener("DOMContentLoaded", async () => {
     for (let i = 0; i < data.length; i++) {
       const li = addLiItem(data[i]);
       list.appendChild(li);
+    }
+
+    // downloaded files
+    const ol = document.getElementById("downloaded-files");
+
+    for (let i = 0; i < bucketData.length; i++) {
+      const li = document.createElement("li");
+      li.style =
+        "display:flex; align-items: center; border:1px solid whitesmoke; border-radius:8px; width:90%;";
+      li.innerHTML = `
+        
+        <div style="display:flex; align-items:start; width:100%; justify-content: space-between; padding:10px; gap:5px;">
+          <span style="font-weight:300; font-size:18px">File${i + 1}</span>
+          <span style="font-size:18px; font-weight:500;">${bucketData[i].date
+            ?.split("_")
+            ?.join(" ")}</span>
+          <a download href=${
+            bucketData[i].url
+          } style="cursor:pointer" type='button'>Download Expenses</a>
+        </div>
+	    `;
+
+      ol.appendChild(li);
     }
   } catch (e) {
     alert(e.message);
@@ -139,8 +167,6 @@ document.getElementById("rzp-button1").onclick = async (e) => {
         console.log(e.message);
       }
     });
-
-    window.location.reload();
   } catch (e) {
     console.log(e);
   }
@@ -210,6 +236,20 @@ const deleteExpenses = async (event) => {
   }
 };
 
-const download = () => {
-  console.log("clicked? download");
+const download = async () => {
+  const token = localStorage.getItem("jwt_token");
+  try {
+    const res = await axios.get("http://localhost:3000/expenses/download", {
+      headers: { Authorization: token },
+    });
+    if (res.status !== 200)
+      throw new Error("Something went wrong, try again later!");
+    const link = document.createElement("a");
+    link.href = res.data.url;
+    link.setAttribute("download", "expenses-data.csv");
+    document.body.appendChild(link);
+    link.click();
+  } catch (e) {
+    console.log(e.message);
+  }
 };

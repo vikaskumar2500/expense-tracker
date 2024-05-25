@@ -11,20 +11,20 @@
 
 <body>
   <main style="
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-items: center;
-        width: 100%;
-      ">
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-items: center;
+    width: 100%;
+  ">
     <form id="form" onsubmit="addExpense(event)" style="
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-items: center;
-          gap: 10px;
-          width: 25rem;
-        ">
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-items: center;
+      gap: 10px;
+      width: 25rem;
+    ">
       <div style="display: flex; flex-direction: column; gap: 5px; width: 100%">
         <label for="amount">Expense Amount</label>
         <input type="number" required style="padding: 5px; padding-inline: 12px; border-radius: 6px" name="amount" id="amount" />
@@ -48,16 +48,16 @@
         </select>
       </div>
       <button type="submit" style="
-            width: 40%;
-            padding: 5px;
-            padding-inline: 12px;
-            border-radius: 6px;
-            margin-top: 10px;
-          ">
+        width: 40%;
+        padding: 5px;
+        padding-inline: 12px;
+        border-radius: 6px;
+        margin-top: 10px;
+      ">
         Add Expense
       </button>
-      <button id="rzp-button1"></button>
-      <button onclick="download()" class="hidden" id="downloadexpense">Download File</button>
+      <button id="rzp-button1">Get Premium</button>
+      <button type="button" onclick="download()" class="hidden" id="downloadexpense">Download File</button>
 
       <div id="premium" class="hidden">
         <span>Your are a Premium user</span>
@@ -70,15 +70,25 @@
 
     <div style="display: grid; grid-template-columns: repeat(2, 1fr)">
       <div id="listdiv" style="
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-          ">
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      ">
         <h1>Expenses</h1>
         <ul id="expense-list"></ul>
       </div>
       <div id="show-leaderboard" style="display: flex; flex-direction: column; align-items: center"></div>
+    </div>
+
+    <div class="hidden" id="downloaded-files-container" style="display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center; width:40rem">
+      <h2>Recent Downloaded files</h2>
+      <ol id="downloaded-files" style="min-height:20rem; width:90%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; overflow-y: scroll">
+
+      </ol>
     </div>
   </main>
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>

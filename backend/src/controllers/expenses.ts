@@ -6,6 +6,8 @@ import Razorpay from "razorpay";
 import { Orders } from "../models/orders";
 import { Users } from "../models/users";
 import { sequelize } from "../db";
+import { s3GetService, s3PutService } from "../sources/s3-service";
+import { currentDate } from "../utils/current-date";
 
 export interface User {
   id: string;
@@ -22,8 +24,21 @@ export const getExpenses = async (req: Request, res: Response) => {
     const expenses = await Expenses.findAll({ where: { userId: user.id } });
     const userData: any = await Users.findOne({ where: { id: user.id } });
 
-    return res.status(200).json({ expenses, isPremium: userData.isPremium });
+    let bucketData = [];
+    if (userData.isPremium) {
+      bucketData = await s3GetService({
+        Bucket: process.env.AWS_S3_BUCKET_NAME,
+        Prefix: `${user.id}`,
+      });
+    }
+
+    return res.status(200).json({
+      expenses,
+      isPremium: userData.isPremium,
+      bucketData: bucketData,
+    });
   } catch (e) {
+    console.log("e", e)
     return res.status(500).json({ message: e.message });
   }
 };
@@ -167,6 +182,44 @@ export const postDeleteExpense = async (req: Request, res: Response) => {
   } catch (e) {
     console.log(e);
     await t.rollback();
+    return res.status(500).json({ message: e.message });
+  }
+};
+
+export const getDownloadExpense = async (req: Request, res: Response) => {
+  try {
+    const token = req.headers["authorization"];
+
+    const user = decodeToken(token);
+
+    if (!user) throw new Error("UnAuthorized user");
+
+    const expenses: any[] = await Expenses.findAll({
+      where: { userId: user.id },
+    });
+
+    let csvFile = "Id,Amount,Description,Category,CreatedAt,UpdatedAt,UserId\n";
+    for (let i = 0; i < expenses.length; i++) {
+      csvFile += `${expenses[i].id},${expenses[i].amount},"${expenses[i].description}","${expenses[i].category}",${expenses[i].createdAt},${expenses[i].updatedAt},${expenses[i].userId}\n`;
+    }
+
+    const Key = `${user.id}/expenses-${currentDate()}.csv`;
+
+    await s3PutService({
+      Bucket: process.env.AWS_S3_BUCKET_NAME,
+      Key,
+      Body: csvFile,
+      ContentType: "text/csv;charset=utf-8",
+      ACL: "public-read",
+    });
+
+    return res.status(200).json({
+      url: `${process.env.AWS_S3_END_POINT}/${Key}`,
+      userId: user.id,
+      Key,
+      date: currentDate(),
+    });
+  } catch (e) {
     return res.status(500).json({ message: e.message });
   }
 };
