@@ -1,3 +1,7 @@
+let limit = 10;
+let offset = 0;
+let count = 0;
+
 addEventListener("DOMContentLoaded", async () => {
   try {
     const token = localStorage.getItem("jwt_token");
@@ -6,9 +10,12 @@ addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    const res = await axios("http://localhost:3000/expenses", {
-      headers: { Authorization: token },
-    });
+    const res = await axios(
+      "http://localhost:3000/expenses?limit=10&offset=0",
+      {
+        headers: { Authorization: token },
+      }
+    );
 
     const data = res.data.expenses;
     const isPremium = res.data.isPremium;
@@ -29,7 +36,7 @@ addEventListener("DOMContentLoaded", async () => {
       downloadedFilesContainer.classList.remove("hidden");
     }
 
-    const list = document.getElementById("expense-list");
+    const list = document.getElementById("expense-list0");
     list.style =
       "display:flex; flex-direction:column; align-items:start; gap:5px; height:20rem;overflow-y: scroll; width:100%; margin:20px";
 
@@ -53,7 +60,6 @@ addEventListener("DOMContentLoaded", async () => {
       li.style =
         "display:flex; align-items: center; border:1px solid whitesmoke; border-radius:8px; width:90%;";
       li.innerHTML = `
-        
         <div style="display:flex; align-items:start; width:100%; justify-content: space-between; padding:10px; gap:5px;">
           <span style="font-weight:300; font-size:18px">File${i + 1}</span>
           <span style="font-size:18px; font-weight:500;">${bucketData[i].date
@@ -71,6 +77,93 @@ addEventListener("DOMContentLoaded", async () => {
     alert(e.message);
   }
 });
+
+const nextExpense = async (e) => {
+  offset += limit;
+  count += 1;
+
+  const token = localStorage.getItem("jwt_token");
+  try {
+    const res = await axios(
+      `http://localhost:3000/expenses?limit=${limit}&offset=${offset}`,
+      {
+        headers: { Authorization: token },
+      }
+    );
+    const data = res.data.expenses;
+
+    const listContainer = document.getElementById("listdiv");
+    const prevul = document.getElementById(`expense-list${count - 1}`);
+
+    if (data.length === 0) {
+      offset -= limit;
+      count -= 1;
+      return;
+    }
+    const back = document.getElementById("back");
+    back.removeAttribute("disabled");
+
+    if (prevul) {
+      prevul.remove();
+    }
+    const nextul = document.createElement("ul");
+    nextul.id = `expense-list${count}`;
+    nextul.style =
+      "display:flex; flex-direction:column; align-items:start; gap:5px; height:20rem;overflow-y: scroll; width:100%; margin:20px";
+
+    for (let i = 0; i < data.length; i++) {
+      const li = addLiItem(data[i]);
+      nextul.appendChild(li);
+    }
+    listContainer.appendChild(nextul);
+  } catch (e) {
+    console.log(e.message);
+  }
+};
+
+const backExpense = async (e) => {
+  offset -= limit;
+  count -= 1;
+
+  if (offset < 0) {
+    e.target.setAttribute("disabled", true);
+    offset += limit;
+    count += 1;
+    return;
+  }
+  try {
+    const token = localStorage.getItem("jwt_token");
+
+    const res = await axios(
+      `http://localhost:3000/expenses?limit=${limit}&offset=${offset}`,
+      {
+        headers: { Authorization: token },
+      }
+    );
+
+    const data = res.data.expenses;
+
+    const nextul = document.getElementById(`expense-list${count + 1}`);
+    if (nextul) {
+      nextul.remove();
+    }
+
+    const listContainer = document.getElementById("listdiv");
+    const prevul = document.createElement("ul");
+    prevul.id = `expense-list${count}`;
+    prevul.style =
+      "display:flex; flex-direction:column; align-items:start; gap:5px; height:20rem;overflow-y: scroll; width:100%; margin:20px";
+
+    for (let i = 0; i < data.length; i++) {
+      const li = addLiItem(data[i]);
+      prevul.appendChild(li);
+    }
+
+    listContainer.appendChild(prevul);
+  } catch (e) {
+    console.log(e.message);
+  }
+};
 
 async function addExpense(e) {
   e.preventDefault();
@@ -96,7 +189,7 @@ async function addExpense(e) {
     if (notFound) {
       notFound.classList.add("hidden");
     }
-    const list = document.getElementById("expense-list");
+    const list = document.getElementById(`expense-list${count}`);
 
     const li = addLiItem({ category, description, amount });
     list.appendChild(li);

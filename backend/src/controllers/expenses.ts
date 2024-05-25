@@ -21,7 +21,12 @@ export const getExpenses = async (req: Request, res: Response) => {
     const user = decodeToken(req.headers["authorization"]) as User;
     if (!user) return res.status(403).json({ message: "UnAuthorized user" });
 
-    const expenses = await Expenses.findAll({ where: { userId: user.id } });
+    const { limit, offset } = req.query;
+    const expenses = await Expenses.findAll({
+      where: { userId: user.id },
+      limit: +limit,
+      offset: +offset,
+    });
     const userData: any = await Users.findOne({ where: { id: user.id } });
 
     let bucketData = [];
@@ -38,7 +43,7 @@ export const getExpenses = async (req: Request, res: Response) => {
       bucketData: bucketData,
     });
   } catch (e) {
-    console.log("e", e)
+    console.log("e", e);
     return res.status(500).json({ message: e.message });
   }
 };
