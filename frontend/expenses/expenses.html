@@ -81,7 +81,18 @@
 
         </div>
 
-        <div id="pagination" style="display: flex; align-items: center; justify-content: center; width: 100%; gap:10px">
+        <div style="display: flex; flex-direction: column; align-items: start; gap: 10px;">
+          <div id="pagination" style="display: flex; align-items: center; justify-content: center; width: 100%; gap:10px">
+          </div>
+          <div style="display: flex; gap:5px; align-items: center;">
+            <label for="limit">Row per pages:</label>
+            <select onchange="dynamicPagination(event)" name="limit" id="limit">
+              <option value="10">10</option>
+              <option value="25">25</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
+          </div>
         </div>
       </div>
       <div id="show-leaderboard" style="display: flex; flex-direction: column; align-items: center"></div>

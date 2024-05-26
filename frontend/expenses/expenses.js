@@ -65,13 +65,14 @@ addEventListener("DOMContentLoaded", async () => {
 
 const getExpenses = async (page) => {
   const token = localStorage.getItem("jwt_token");
+  const limit = +localStorage.getItem("limit") || 10;
   if (!token) {
     window.location.href = "../signin/signin.html";
     return;
   }
   try {
     const expenseRes = await axios(
-      `http://localhost:3000/expenses?limit=10&page=${page}`,
+      `http://localhost:3000/expenses?limit=${limit}&page=${page}`,
       {
         headers: { Authorization: token },
       }
@@ -129,6 +130,12 @@ const showPagination = async ({ next, prev, hasNext, hasPrev, last, curr }) => {
     nextBtn.addEventListener("click", () => getExpenses(next));
     pagination.appendChild(nextBtn);
   }
+};
+
+const dynamicPagination = async (e) => {
+  e.preventDefault();
+  localStorage.setItem("limit", e.target.value);
+  await getExpenses(1)
 };
 
 async function addExpense(e) {
