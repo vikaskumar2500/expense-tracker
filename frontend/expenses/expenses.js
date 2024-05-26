@@ -9,19 +9,19 @@ addEventListener("DOMContentLoaded", async () => {
       window.location.href = "../signin/signin.html";
       return;
     }
+    await getExpenses(1);
 
-    const res = await axios(
-      "http://localhost:3000/expenses?limit=10&offset=0",
-      {
-        headers: { Authorization: token },
-      }
+    const isPremiumRes = await axios(
+      "http://localhost:3000/expenses/is-premium",
+      { headers: { Authorization: token } }
     );
 
-    const data = res.data.expenses;
-    const isPremium = res.data.isPremium;
-    const bucketData = res.data.bucketData;
+    const s3Res = await axios("http://localhost:3000/expenses/s3", {
+      headers: { Authorization: token },
+    });
 
-    console.log("bucket", bucketData);
+    const isPremium = isPremiumRes.data;
+    const s3Data = s3Res.data;
 
     const getPremiumButton = document.getElementById("rzp-button1");
     const premium = document.getElementById("premium");
@@ -36,37 +36,21 @@ addEventListener("DOMContentLoaded", async () => {
       downloadedFilesContainer.classList.remove("hidden");
     }
 
-    const list = document.getElementById("expense-list0");
-    list.style =
-      "display:flex; flex-direction:column; align-items:start; gap:5px; height:20rem;overflow-y: scroll; width:100%; margin:20px";
-
-    if (data.length === 0) {
-      list.innerHTML = `
-        <span id="not-found" style="max-width:40rem">Expenses not found!</span>
-      `;
-      return;
-    }
-
-    for (let i = 0; i < data.length; i++) {
-      const li = addLiItem(data[i]);
-      list.appendChild(li);
-    }
-
     // downloaded files
     const ol = document.getElementById("downloaded-files");
 
-    for (let i = 0; i < bucketData.length; i++) {
+    for (let i = 0; i < s3Data.length; i++) {
       const li = document.createElement("li");
       li.style =
         "display:flex; align-items: center; border:1px solid whitesmoke; border-radius:8px; width:90%;";
       li.innerHTML = `
         <div style="display:flex; align-items:start; width:100%; justify-content: space-between; padding:10px; gap:5px;">
           <span style="font-weight:300; font-size:18px">File${i + 1}</span>
-          <span style="font-size:18px; font-weight:500;">${bucketData[i].date
+          <span style="font-size:18px; font-weight:500;">${s3Data[i].date
             ?.split("_")
             ?.join(" ")}</span>
           <a download href=${
-            bucketData[i].url
+            s3Data[i].url
           } style="cursor:pointer" type='button'>Download Expenses</a>
         </div>
 	    `;
@@ -74,94 +58,76 @@ addEventListener("DOMContentLoaded", async () => {
       ol.appendChild(li);
     }
   } catch (e) {
+    console.log("error", e.message);
     alert(e.message);
   }
 });
 
-const nextExpense = async (e) => {
-  offset += limit;
-  count += 1;
-
+const getExpenses = async (page) => {
   const token = localStorage.getItem("jwt_token");
-  try {
-    const res = await axios(
-      `http://localhost:3000/expenses?limit=${limit}&offset=${offset}`,
-      {
-        headers: { Authorization: token },
-      }
-    );
-    const data = res.data.expenses;
-
-    const listContainer = document.getElementById("listdiv");
-    const prevul = document.getElementById(`expense-list${count - 1}`);
-
-    if (data.length === 0) {
-      offset -= limit;
-      count -= 1;
-      return;
-    }
-    const back = document.getElementById("back");
-    back.removeAttribute("disabled");
-
-    if (prevul) {
-      prevul.remove();
-    }
-    const nextul = document.createElement("ul");
-    nextul.id = `expense-list${count}`;
-    nextul.style =
-      "display:flex; flex-direction:column; align-items:start; gap:5px; height:20rem;overflow-y: scroll; width:100%; margin:20px";
-
-    for (let i = 0; i < data.length; i++) {
-      const li = addLiItem(data[i]);
-      nextul.appendChild(li);
-    }
-    listContainer.appendChild(nextul);
-  } catch (e) {
-    console.log(e.message);
-  }
-};
-
-const backExpense = async (e) => {
-  offset -= limit;
-  count -= 1;
-
-  if (offset < 0) {
-    e.target.setAttribute("disabled", true);
-    offset += limit;
-    count += 1;
+  if (!token) {
+    window.location.href = "../signin/signin.html";
     return;
   }
   try {
-    const token = localStorage.getItem("jwt_token");
-
-    const res = await axios(
-      `http://localhost:3000/expenses?limit=${limit}&offset=${offset}`,
+    const expenseRes = await axios(
+      `http://localhost:3000/expenses?limit=10&page=${page}`,
       {
         headers: { Authorization: token },
       }
     );
 
-    const data = res.data.expenses;
-
-    const nextul = document.getElementById(`expense-list${count + 1}`);
-    if (nextul) {
-      nextul.remove();
-    }
-
-    const listContainer = document.getElementById("listdiv");
-    const prevul = document.createElement("ul");
-    prevul.id = `expense-list${count}`;
-    prevul.style =
-      "display:flex; flex-direction:column; align-items:start; gap:5px; height:20rem;overflow-y: scroll; width:100%; margin:20px";
-
-    for (let i = 0; i < data.length; i++) {
-      const li = addLiItem(data[i]);
-      prevul.appendChild(li);
-    }
-
-    listContainer.appendChild(prevul);
+    await getExpenseList(expenseRes.data.expenses);
+    await showPagination(expenseRes.data.pagination);
   } catch (e) {
-    console.log(e.message);
+    console.log("e.message", e.message);
+  }
+};
+
+const getExpenseList = async (expenses) => {
+  const expenseList = document.getElementById("expense-list-container");
+
+  const ul = document.createElement("ul");
+
+  ul.style =
+    "display:flex; flex-direction:column; align-items:start; gap:5px; height:20rem;overflow-y: scroll; width:100%; margin:20px";
+
+  if (expenses.length === 0) {
+    ul.innerHTML = `
+        <span id="not-found" style="max-width:40rem">Expenses not found!</span>
+      `;
+    return;
+  }
+
+  for (let i = 0; i < expenses.length; i++) {
+    const li = addLiItem(expenses[i]);
+    ul.appendChild(li);
+  }
+  expenseList.replaceChildren(ul);
+};
+
+const pagination = document.getElementById("pagination");
+
+const showPagination = async ({ next, prev, hasNext, hasPrev, last, curr }) => {
+  pagination.innerHTML = ``;
+  if (hasPrev) {
+    const prevBtn = document.createElement("button");
+    prevBtn.innerHTML = `<span>${prev}</span>`;
+    prevBtn.addEventListener("click", async () => await getExpenses(prev));
+    pagination.appendChild(prevBtn);
+  }
+  const currBtn = document.createElement("button");
+  currBtn.style =
+    "border:2px solid black; padding:5px; padding-inline:8px; border-radius:5px";
+  currBtn.innerHTML = `<span style="font-weight:600;border:2px">${curr} <span>`;
+  currBtn.addEventListener("click", () => getExpenses(curr));
+  pagination.appendChild(currBtn);
+
+  if (hasNext && hasNext < last) {
+    const nextBtn = document.createElement("button");
+    nextBtn.innerHTML = `<span>${next}</span>`;
+    nextBtn.addEventListener("click", () => getExpenses(next));
+    pagination.appendChild(nextBtn);
   }
 };
 
@@ -189,7 +155,7 @@ async function addExpense(e) {
     if (notFound) {
       notFound.classList.add("hidden");
     }
-    const list = document.getElementById(`expense-list${count}`);
+    const list = document.getElementById(`ul${count}`);
 
     const li = addLiItem({ category, description, amount });
     list.appendChild(li);
@@ -213,7 +179,6 @@ const addLiItem = ({ id, category, description, amount }) => {
       <button id='delete' value=${id} onclick="deleteExpenses(event)" style="cursor:pointer" type='button'>Delete Expense</button>
 		</div>
 	`;
-
   return li;
 };
 

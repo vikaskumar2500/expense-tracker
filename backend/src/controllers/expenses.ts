@@ -21,30 +21,50 @@ export const getExpenses = async (req: Request, res: Response) => {
     const user = decodeToken(req.headers["authorization"]) as User;
     if (!user) return res.status(403).json({ message: "UnAuthorized user" });
 
-    const { limit, offset } = req.query;
+    const page = +req.query.page;
+    const limit = +req.query.limit;
+    const totalCount = await Expenses.count({ where: { userId: user.id } });
     const expenses = await Expenses.findAll({
       where: { userId: user.id },
-      limit: +limit,
-      offset: +offset,
+      limit: limit,
+      offset: (page - 1) * limit,
     });
-    const userData: any = await Users.findOne({ where: { id: user.id } });
-
-    let bucketData = [];
-    if (userData.isPremium) {
-      bucketData = await s3GetService({
-        Bucket: process.env.AWS_S3_BUCKET_NAME,
-        Prefix: `${user.id}`,
-      });
-    }
 
     return res.status(200).json({
       expenses,
-      isPremium: userData.isPremium,
-      bucketData: bucketData,
+      pagination: {
+        next: page + 1,
+        prev: page - 1,
+        hasPrev: page > 1,
+        hasNext: limit * page < totalCount,
+        curr: page,
+        last: Math.ceil(totalCount / limit),
+      },
     });
   } catch (e) {
     console.log("e", e);
     return res.status(500).json({ message: e.message });
+  }
+};
+
+export const getS3BucketData = async (req: Request, res: Response) => {
+  try {
+    const token = req.headers["authorization"];
+    const user = decodeToken(token);
+    if (!user) throw new Error("UnAuthorized user");
+
+    const userData: any = await Users.findByPk(user.id);
+
+    if (!userData.isPremium)
+      throw new Error("Oops!, You are not a premium user");
+
+    const bucketData = await s3GetService({
+      Bucket: process.env.AWS_S3_BUCKET_NAME,
+      Prefix: `${user.id}`,
+    });
+    return res.status(200).json(bucketData);
+  } catch (e) {
+    res.status(500).json({ message: e.message });
   }
 };
 
@@ -55,9 +75,7 @@ export const postaddExpense = async (req: Request, res: Response) => {
     const user = jwt.verify(token, process.env.SECRET_KEY) as User;
 
     if (!user) throw new Error("Something went wrong, please login again!");
-    // console.log("userId", user.id)
     const updatedUser: any = await Users.findByPk(user.id);
-
     await Users.update(
       { total_expenses: updatedUser.total_expenses + Number(amount) },
       { where: { id: user.id }, transaction: t }
