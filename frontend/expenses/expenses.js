@@ -57,6 +57,9 @@ addEventListener("DOMContentLoaded", async () => {
 
       ol.appendChild(li);
     }
+
+    const select = document.getElementById("limit");
+    const limit = localStorage.getItem("limit");
   } catch (e) {
     console.log("error", e.message);
     alert(e.message);
@@ -135,7 +138,7 @@ const showPagination = async ({ next, prev, hasNext, hasPrev, last, curr }) => {
 const dynamicPagination = async (e) => {
   e.preventDefault();
   localStorage.setItem("limit", e.target.value);
-  await getExpenses(1)
+  await getExpenses(1);
 };
 
 async function addExpense(e) {
