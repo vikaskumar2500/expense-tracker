@@ -7,12 +7,15 @@ import dotenv from "dotenv";
 import expenseRouter from "./routes/expenses";
 import usersRouter from "./routes/users";
 import premiumRouter from "./routes/premium";
-import passwordRouter from './routes/password';
+import passwordRouter from "./routes/password";
 import { Users } from "./models/users";
 import { Expenses } from "./models/expenses";
 import { Orders } from "./models/orders";
 import { ForgotPasswords } from "./models/forgot-password";
 import path from "path";
+import helmet from "helmet";
+import morgan from "morgan";
+import fs from "fs";
 
 dotenv.config();
 
@@ -22,7 +25,7 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.set('view engine', 'ejs');
+app.set("view engine", "ejs");
 app.set("views", path.join(__dirname + "/views"));
 
 app.use("/user", usersRouter);
@@ -38,6 +41,13 @@ app.use("/", (req, res) => {
   `);
 });
 
+const errorLogs = fs.createWriteStream(path.join(__dirname, "errors.log"), {
+  flags: "a",
+});
+
+app.use(morgan("combined", { stream: errorLogs }));
+app.use(helmet());
+
 Users.hasMany(Expenses);
 Expenses.belongsTo(Users, {
   constraints: true,
@@ -49,7 +59,6 @@ Orders.belongsTo(Users);
 
 Users.hasMany(ForgotPasswords, { onDelete: "CASCADE", constraints: true });
 ForgotPasswords.belongsTo(Users, { constraints: true, onDelete: "CASCADE" });
-
 
 sequelize
   .sync()
